@@ -137,7 +137,7 @@ function buildCleanReport(date, stats, cfg) {
   blocks.push(text(""));
   blocks.push(text("\uD83D\uDCCA \u77E5\u8BC6\u5E93\uFF1A" + stats.totalPapers + " \u7BC7\u8BBA\u6587 + " + stats.totalRepos + " \u4E2A\u4ED3\u5E93"));
   blocks.push(text(""));
-  blocks.push(text("\uD83D\uDD17 Briefing\uFF1Ahttps://" + (cfg.feishu_domain || "ycn00b2861nl.feishu.cn") + "/drive/home/", { italic: true }));
+  blocks.push(text("\uD83D\uDD17 Briefing\uFF1Ahttps://" + (cfg.feishu_domain || "YOUR_TENANT.feishu.cn") + "/drive/home/", { italic: true }));
   return blocks;
 }
 

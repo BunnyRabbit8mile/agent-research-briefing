@@ -30,10 +30,10 @@ Daily automated briefing that fetches the latest AI agent research from arXiv, G
 
 ```
 # Manual run (idempotent — skips if no new content unless --force)
-D:\nvm\v26.3.1\node.exe arxiv_feishu_briefing.js --force
+node arxiv_feishu_briefing.js --force
 
 # First run with backfill (seeds important historical papers)
-D:\nvm\v26.3.1\node.exe arxiv_feishu_briefing.js --backfill
+node arxiv_feishu_briefing.js --backfill
 ```
 
 ## Data Sources
@@ -75,4 +75,4 @@ D:\nvm\v26.3.1\node.exe arxiv_feishu_briefing.js --backfill
 - PowerShell heredocs `@"..."@` mangle `$` and `\\` in regex. When modifying the script, use `.js` patch files via `node -e` or write to temp files.
 - `config.json` must not have BOM (PowerShell `Set-Content -Encoding UTF8` adds it; use Node.js `fs.writeFileSync` instead).
 - GitHub token is a classic PAT with no scopes (`ghp_` prefix).
-- Feishu OAuth redirect URL: `https://ycn00b2861nl.feishu.cn/drive/home/`.
+- Feishu OAuth redirect URL: `https://YOUR_TENANT.feishu.cn/drive/home/`.

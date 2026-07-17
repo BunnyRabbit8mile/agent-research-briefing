@@ -7,12 +7,12 @@ const path = require("path");
 const { execSync } = require("child_process");
 
 // Hardcoded - watchdog may run from a different directory than the project
-const PROJECT_DIR = "C:\\Users\\hotsa\\Documents\\agent-research-daily-report";
+const PROJECT_DIR = __dirname;
 const ERROR_LOG = path.join(PROJECT_DIR, "logs", "errors.log");
 const CHECKPOINT = path.join(PROJECT_DIR, "logs", ".last_checkpoint");
 const WATCHDOG_LOG = path.join(PROJECT_DIR, "logs", "watchdog.log");
 const NEEDS_ATTENTION = path.join(PROJECT_DIR, "logs", "needs_attention.md");
-const CODEX = "C:\\Users\\hotsa\\AppData\\Local\\Programs\\OpenAI\\Codex\\bin\\codex.exe";
+const CODEX = process.env.CODEX_PATH || "codex";
 const MAX_ERROR_BYTES = 50000;
 
 function log(msg) {
@@ -54,7 +54,7 @@ function buildPrompt(errors) {
     ? errors.slice(0, MAX_ERROR_BYTES) + "\n... (truncated, " + errors.length + " bytes total)"
     : errors;
 
-  return "You are an autonomous error-fixing agent for the \"agent-research-daily-report\" project.\n\n## Full Project Context (AGENTS.md)\n" + agentsMd + "\n\n## Error Log (new errors since last check)\n```\n" + (errorText.trim() || "(no errors)") + "\n```\n\n## Fix Protocol (try in that order)\n1. GitHub rate limit / API error -> verify token validity, adjust delay/retry, add exponential backoff\n2. Config JSON parse error -> strip BOM with Node.js fs.writeFileSync (NEVER use PowerShell Set-Content which adds BOM)\n3. papers_store.json corrupt -> backup to papers_store.json.bak, recreate with { \"papers\": {}, \"repos\": {} }\n4. Feishu auth error (token expired / refresh failed) -> CANNOT auto-fix. Write a clear report to logs/needs_attention.md with:\n   - Error details\n   - What human must do: re-run auth_feishu.js to get fresh tokens, update config.json\n5. Network/proxy error (127.0.0.1:7897) -> add fallback path that bypasses proxy on retry\n6. Any other error -> diagnose root cause, apply minimal surgical fix\n\n## Unfixable Errors -> Notification\nIf you cannot fix an error, write a clear standalone report to:\n  logs/needs_attention.md\n\nUse this format:\n```markdown\n# Needs Attention — YYYY-MM-DD\n\n## [Error Category]\n- **Error:** exact error message\n- **Action Required:** specific steps for human\n```\n\n## Rules\n- Only modify files within C:\\Users\\hotsa\\Documents\\agent-research-daily-report\n- Never expose secrets (feishu_app_secret, tokens) in any output or log\n- Keep changes minimal — fix the error, do not refactor unrelated code\n- config.json must NOT have BOM\n- After fixing, verify the fix by re-reading changed lines\n\n## Output\nSummarize: what errors were found, what you fixed, and what still needs human attention.";
+  return "You are an autonomous error-fixing agent for the \"agent-research-daily-report\" project.\n\n## Full Project Context (AGENTS.md)\n" + agentsMd + "\n\n## Error Log (new errors since last check)\n```\n" + (errorText.trim() || "(no errors)") + "\n```\n\n## Fix Protocol (try in that order)\n1. GitHub rate limit / API error -> verify token validity, adjust delay/retry, add exponential backoff\n2. Config JSON parse error -> strip BOM with Node.js fs.writeFileSync (NEVER use PowerShell Set-Content which adds BOM)\n3. papers_store.json corrupt -> backup to papers_store.json.bak, recreate with { \"papers\": {}, \"repos\": {} }\n4. Feishu auth error (token expired / refresh failed) -> CANNOT auto-fix. Write a clear report to logs/needs_attention.md with:\n   - Error details\n   - What human must do: re-run auth_feishu.js to get fresh tokens, update config.json\n5. Network/proxy error (127.0.0.1:7897) -> add fallback path that bypasses proxy on retry\n6. Any other error -> diagnose root cause, apply minimal surgical fix\n\n## Unfixable Errors -> Notification\nIf you cannot fix an error, write a clear standalone report to:\n  logs/needs_attention.md\n\nUse this format:\n```markdown\n# Needs Attention — YYYY-MM-DD\n\n## [Error Category]\n- **Error:** exact error message\n- **Action Required:** specific steps for human\n```\n\n## Rules\n- Only modify files within the project directory\n- Never expose secrets (feishu_app_secret, tokens) in any output or log\n- Keep changes minimal — fix the error, do not refactor unrelated code\n- config.json must NOT have BOM\n- After fixing, verify the fix by re-reading changed lines\n\n## Output\nSummarize: what errors were found, what you fixed, and what still needs human attention.";
 }
 
 async function main() {

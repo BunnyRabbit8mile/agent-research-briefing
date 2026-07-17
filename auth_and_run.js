@@ -54,7 +54,7 @@ const server = http.createServer(async (req, res) => {
     // Now run the briefing script
     console.log("Running briefing script...\n");
     const { spawn } = require("child_process");
-    const node = "C:\\Users\\hotsa\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin\\node.exe";
+    const node = "process.execPath";
     const script = path.join(__dirname, "arxiv_feishu_briefing.js");
     const proc = spawn(node, [script, "--force"], {
       cwd: __dirname,

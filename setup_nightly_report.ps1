@@ -4,7 +4,7 @@
 
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$NodeExe = "D:\nvm\v26.3.1\node.exe"
+$NodeExe = "node"
 $ScriptPath = Join-Path $ScriptDir "nightly_report.js"
 $LogDir = Join-Path $ScriptDir "logs"
 
