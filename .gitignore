@@ -1,0 +1,10 @@
+config.json
+logs/
+__pycache__/
+*.pyc
+.DS_Store
+papers_store.json
+papers_store.json.bak
+papers_store.json.tmp
+papers_store.json.corrupt.*
+config.json.tmp

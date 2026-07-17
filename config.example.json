@@ -1,0 +1,14 @@
+{
+    "_comment": "Copy this to config.json and fill in your values. Never commit config.json.",
+    "feishu_app_id": "YOUR_FEISHU_APP_ID",
+    "feishu_app_secret": "YOUR_FEISHU_APP_SECRET",
+    "feishu_space_id": "YOUR_KNOWLEDGE_BASE_SPACE_ID",
+    "feishu_domain": "your-tenant.feishu.cn",
+    "feishu_parent_node": "",
+    "feishu_user_id": "",
+    "feishu_user_token": "",
+    "feishu_refresh_token": "",
+    "github_token": "ghp_YOUR_GITHUB_CLASSIC_PAT",
+    "twitter_auth_token": "",
+    "twitter_ct0": ""
+}
