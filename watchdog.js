@@ -4,7 +4,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { spawnSync } = require("child_process");
+const { execSync } = require("child_process");
 
 // Hardcoded - watchdog may run from a different directory than the project
 const PROJECT_DIR = "C:\\Users\\hotsa\\Documents\\agent-research-daily-report";
@@ -70,27 +70,21 @@ async function main() {
   log("Found " + errorLines + " new error line(s) (" + errors.text.length + " bytes). Launching Codex...");
 
   const prompt = buildPrompt(errors.text);
-  log("Prompt prepared (" + prompt.length + " chars), launching Codex...");
+  const promptFile = path.join(require("os").tmpdir(), ".watchdog_prompt.txt");
+  fs.writeFileSync(promptFile, prompt, "utf-8");
+  log("Prompt written (" + prompt.length + " chars)");
+  const cmd = "type \"" + promptFile + "\" | \"" + CODEX + "\" exec -C \"" + PROJECT_DIR + "\" --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check --ephemeral -";
 
+  log("Executing: codex exec -C " + PROJECT_DIR + " ...");
   try {
-    const result = spawnSync(CODEX, [
-      "exec", "-C", PROJECT_DIR,
-      "--dangerously-bypass-approvals-and-sandbox",
-      "--skip-git-repo-check",
-      "--ephemeral", "-"
-    ], {
-      input: prompt,
+    const output = execSync(cmd, {
       encoding: "utf-8",
       timeout: 900000,
       maxBuffer: 20 * 1024 * 1024,
-      cwd: PROJECT_DIR,
+      cwd: PROJECT_DIR
     });
-
-    if (result.error) throw result.error;
-
-    log("Codex exec completed (exit " + result.status + ").");
-    const output = (result.stdout || "") + (result.stderr || "");
-    if (output.trim()) {
+    log("Codex exec completed successfully.");
+    if (output && output.trim()) {
       try { fs.appendFileSync(WATCHDOG_LOG, "--- codex output ---\n" + output.trim() + "\n--- end codex ---\n", "utf-8"); } catch (e) {}
     }
   } catch (e) {
@@ -98,13 +92,15 @@ async function main() {
     if (e.stdout) { try { fs.appendFileSync(WATCHDOG_LOG, "--- stdout ---\n" + String(e.stdout).trim() + "\n", "utf-8"); } catch (_) {} }
     if (e.stderr) { try { fs.appendFileSync(WATCHDOG_LOG, "--- stderr ---\n" + String(e.stderr).trim() + "\n", "utf-8"); } catch (_) {} }
     try {
-      var attn = "# Needs Attention — " + new Date().toISOString().slice(0, 10) + "\n\n";
+      let attn = "# Needs Attention — " + new Date().toISOString().slice(0, 10) + "\n\n";
       attn += "## Watchdog: codex exec failed\n";
       attn += "- **Error:** " + (e.message || "unknown") + "\n";
       attn += "- **Action Required:** Check logs/watchdog.log for details. Manually run codex exec.\n";
       fs.appendFileSync(NEEDS_ATTENTION, attn, "utf-8");
     } catch (_) {}
   }
+
+  try { fs.unlinkSync(promptFile); } catch (_) {}
 
   log("=== Watchdog finished ===");
 }

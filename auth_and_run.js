@@ -2,8 +2,7 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
-const crypto = require("crypto");
-const { spawn } = require("child_process");
+const { exec } = require("child_process");
 
 const CONFIG = path.join(__dirname, "config.json");
 const cfg = JSON.parse(fs.readFileSync(CONFIG, "utf-8"));
@@ -12,18 +11,14 @@ const REDIRECT = "http://127.0.0.1:" + PORT + "/callback";
 
 const AUTH_URL = "https://open.feishu.cn/open-apis/authen/v1/authorize?" +
   "app_id=" + cfg.feishu_app_id +
-  "&redirect_uri=" + encodeURIComponent(REDIRECT) + "&state=" + oauthState;
+  "&redirect_uri=" + encodeURIComponent(REDIRECT);
 
 console.log("\n=== Opening browser for ONE-TIME authorization ===\n");
 console.log("URL: " + AUTH_URL + "\n");
 
-const oauthState = crypto.randomBytes(16).toString("hex");
-
 const server = http.createServer(async (req, res) => {
   const u = new URL(req.url, "http://127.0.0.1");
   const code = u.searchParams.get("code");
-  const recvState = u.searchParams.get("state");
-  if (recvState !== oauthState) { res.end("Invalid state"); server.close(); return; }
   if (!code) { res.end("Waiting..."); return; }
 
   console.log("Got code, exchanging for token...");
@@ -76,6 +71,6 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "127.0.0.1");
-spawn('cmd', ['/c', 'start', '', AUTH_URL], { detached: true, stdio: 'ignore' }).unref();
+exec('start "" "' + AUTH_URL + '"');
 console.log("Waiting for authorization (2 min timeout)...\n");
 setTimeout(() => { console.log("Timed out"); server.close(); process.exit(1); }, 120000);

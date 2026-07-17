@@ -5,8 +5,7 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
-const crypto = require("crypto");
-const { spawn } = require("child_process");
+const { exec } = require("child_process");
 
 const CONFIG = path.join(__dirname, "config.json");
 const cfg = JSON.parse(fs.readFileSync(CONFIG, "utf-8"));
@@ -16,23 +15,20 @@ const REDIRECT = "http://localhost:" + PORT + "/callback";
 const AUTH_URL = "https://open.feishu.cn/open-apis/authen/v1/authorize?" +
   "app_id=" + cfg.feishu_app_id +
   "&redirect_uri=" + encodeURIComponent(REDIRECT) +
-  "&scope=docx%3Adocument%3Acreate%20docx%3Adocument%3Areadonly%20drive%3Adrive%3Areadonly" + "&state=" + oauthState;
+  "&scope=docx%3Adocument%3Acreate%20docx%3Adocument%3Areadonly%20drive%3Adrive%3Areadonly";
 
 console.log("\nOpening browser for Feishu authorization...\n");
 console.log("After authorizing, the page will redirect to localhost.\n");
 
-const oauthState = crypto.randomBytes(16).toString("hex");
-
 // Open browser
-const platformCmd = process.platform === "win32" ? ["cmd", ["/c", "start", "", AUTH_URL]] : ["open", [AUTH_URL]];
-spawn(platformCmd[0], platformCmd[1], { detached: true, stdio: "ignore" }).unref();
+const start = (process.platform === "win32")
+  ? "start " : "open ";
+exec(start + '"" "' + AUTH_URL + '"');
 
 // Start local server to catch the OAuth callback
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost");
   const code = url.searchParams.get("code");
-  const recvState = url.searchParams.get("state");
-  if (recvState !== oauthState) { res.end("Invalid state"); server.close(); return; }
 
   if (!code) {
     res.end("No auth code received. Please try again.");

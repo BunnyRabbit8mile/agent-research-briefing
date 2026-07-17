@@ -12,11 +12,7 @@ const LOG_FILE = path.join(LOG_DIR, "errors.log");
 
 function logError(ctx, err) {
   const ts = new Date().toISOString();
-  // Sanitize: strip Bearer tokens and other credentials from error messages
-  let errMsg = (err?.message || String(err));
-  errMsg = errMsg.replace(/Bearer\s+[A-Za-z0-9._\-]+/gi, "Bearer [REDACTED]");
-  errMsg = errMsg.replace(/(?:secret|token|key)=[A-Za-z0-9_\-]+/gi, "$1=[REDACTED]");
-  const msg = "[" + ts + "] " + ctx + ": " + errMsg;
+  const msg = "[" + ts + "] " + ctx + ": " + (err?.message || err);
   console.error("  " + msg);
   try { fs.appendFileSync(LOG_FILE, msg + "\n", "utf-8"); } catch(e) {}
 }
@@ -111,7 +107,7 @@ function loadConfig() {
 // arXiv
 // ═══════════════════════════════════════════════════════════
 async function fetchArxiv(query, count, sortBy) {
-  const url = "https://export.arxiv.org/api/query?" + new URLSearchParams({
+  const url = "http://export.arxiv.org/api/query?" + new URLSearchParams({
     search_query: query, sortBy, sortOrder: "descending", max_results: String(count),
   });
   const label = sortBy === "relevance" ? "[important]" : "[latest]";
@@ -119,9 +115,7 @@ async function fetchArxiv(query, count, sortBy) {
   try {
     const r = await retryFetch(url, { signal: AbortSignal.timeout(60000) });
     if (!r.ok) { console.error("  [WARN] arXiv " + r.status); return []; }
-    const text = await r.text();
-    if (text.length > 5_000_000) { console.error("  [WARN] arXiv response too large (" + text.length + " bytes), skipping"); return []; }
-    return parseAtom(text);
+    return parseAtom(await r.text());
   } catch (e) { console.error("  [WARN] " + e.message); return []; }
 }
 
@@ -271,7 +265,6 @@ async function fetchBlogNews() {
           if (items.filter(i => i.source === "Hacker News").length >= 5) break;
         }
       } catch (e) {}
-      await sleep(50); // rate-limit: 50ms between HN item requests
     }
   } catch (e) { console.error("  [WARN] HN:", e.message); }
 

@@ -84,7 +84,7 @@ function getTodaysStats() {
 function classify(msg) {
   if (/rate limit|429|throttl/i.test(msg)) return { cat: "速率限制", level: "observed", fix: "增加请求间隔，检查 GitHub token 配额" };
   if (/token.*expir|auth.*fail|unauthorized|401|403/i.test(msg)) return { cat: "认证失败", level: "observed", fix: "令牌过期，手动运行 auth_feishu.js 刷新" };
-  if (/ENOTFOUND|ECONNREFUSED|ETIMEDOUT|fetch failed|network/i.test(msg)) return { cat: "网络错误", level: "observed", fix: "检查代理/网络连接是否正常" };
+  if (/ENOTFOUND|ECONNREFUSED|ETIMEDOUT|fetch failed|network/i.test(msg)) return { cat: "网络错误", level: "observed", fix: "检查代理 (127.0.0.1:7897) 是否在线" };
   if (/JSON.*parse|SyntaxError|Unexpected token/i.test(msg)) return { cat: "数据解析错误", level: "observed", fix: "API 返回异常，检查响应内容" };
   if (/BOM|byte order/i.test(msg)) return { cat: "BOM 编码", level: "observed", fix: "用 Node.js fs.writeFileSync 重写配置文件" };
   if (/timeout|abort/i.test(msg)) return { cat: "请求超时", level: "observed", fix: "增加超时或检查目标服务" };
